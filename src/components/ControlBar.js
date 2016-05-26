@@ -15,6 +15,8 @@ export default class ControlBar extends React.Component {
   static propTypes = {
     isPlaying: React.PropTypes.bool,
     isStopped: React.PropTypes.bool,
+    repeatMode: React.PropTypes.string,
+    shuffleMode: React.PropTypes.string,
     onPlayPress: React.PropTypes.func,
     onPrevPress: React.PropTypes.func,
     onNextPress: React.PropTypes.func,
@@ -28,11 +30,20 @@ export default class ControlBar extends React.Component {
   }
 
   render = () => {
-    const { onPlayPress, onPrevPress, onNextPress, onRepeatPress, onShufflePress, isPlaying, isStopped } = this.props
-    const repeatIcon = <IconMaterial name='repeat' size={26} color={colors.GREY_DARK} />
+    const { onPlayPress, onPrevPress, onNextPress, onRepeatPress, onShufflePress, isPlaying, isStopped, shuffleMode, repeatMode } = this.props
+
+    let repeatColor = colors.GREY_DARK;
+    let shuffleColor = colors.GREY_DARK;
+    if (repeatMode !== 'NO_REPEAT') {
+      repeatColor = colors.ORANGE;
+    }
+    if (shuffleMode !== 'NO_SHUFFLE') {
+      shuffleColor = colors.ORANGE;
+    }
+    const repeatIcon = <IconMaterial name={repeatMode === 'SINGLE_REPEAT' ? 'repeat-one' : 'repeat'} size={26} color={repeatColor} />
     const prevIcon = <IconMaterial name='skip-previous' size={26} color={colors.GREY_DARK} />
     const nextIcon = <IconMaterial name='skip-next' size={26} color={colors.GREY_DARK} />
-    const shuffleIcon = <IconMaterial name='shuffle' size={26} color={colors.GREY_DARK} />
+    const shuffleIcon = <IconMaterial name='shuffle' size={26} color={shuffleColor} />
 
     return (
       <View style={styles.container}>

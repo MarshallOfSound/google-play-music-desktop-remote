@@ -11,7 +11,7 @@ import wsMessages from 'GooglePlayMusicDesktopRemote/src/utils/wsMessages'
 
 const theme = getTheme()
 
-const IP_ADDRESS = '192.168.1.50'
+const IP_ADDRESS = '118.138.193.83'
 const PORT = 5672
 const WEBSOCKET_ADDRESS = `ws://${IP_ADDRESS}:${PORT}`
 
@@ -29,7 +29,9 @@ export default class HomeScreen extends React.Component {
       isPlaying: false,
       isStopped: true,
       currentTime: 0,
-      totalTime: 0
+      totalTime: 0,
+      shuffleMode: 'NO_SHUFFLE',
+      repeatMode: 'NO_REPEAT'
     }
   }
 
@@ -62,7 +64,6 @@ export default class HomeScreen extends React.Component {
     const { channel, payload } = JSON.parse(msg.data)
     if (channel === 'song') {
       let { title, artist, album, albumArt } = payload
-      albumArt = albumArt.substring(0, albumArt.length - 11)
       this.setState({ title, artist, album, albumArt })
       this.setState({ isStopped: false })
     }
@@ -74,7 +75,13 @@ export default class HomeScreen extends React.Component {
       this.setState({ currentTime: payload.current, totalTime: payload.total })
       this.progressSliderRef.setValue(this.state.currentTime)
     }
-    if (channel !== 'time') {
+    if (channel === 'shuffle') {
+      this.setState({ shuffleMode: payload });
+    }
+    if (channel === 'repeat') {
+      this.setState({ repeatMode: payload });
+    }
+    if (channel !== 'time' && channel !== 'lyrics') {
       console.log(`WebSocket message received, channel: ${channel}, payload: ${payload}`)
     }
   }
@@ -93,24 +100,26 @@ export default class HomeScreen extends React.Component {
   }
 
   _handleShufflePress = () =>
-    this._sendMessage([wsMessages.TOGGLE_SHUFFLE, wsMessages.GET_SHUFFLE])
+    this._sendMessage(wsMessages.TOGGLE_SHUFFLE)
 
   _handleRepeatPress = () =>
-    this._sendMessage([wsMessages.TOGGLE_REPEAT, wsMessages.GET_REPEAT])
+    this._sendMessage(wsMessages.TOGGLE_REPEAT)
 
   _handleProgressBarTouch = (value) =>
     this._sendMessage(wsMessages.SET_TIME([value]))
 
   _sendMessage = (message) => {
+    console.log('send attempt', JSON.stringify(message));
     if (message.isArray) {
-      message.forEach((msg) => this.ws.send(JSON.stringify(message)))
+      message.forEach((msg) => this.ws.send(JSON.stringify(msg)))
     } else {
+      console.log('Sending', JSON.stringify(message));
       this.ws.send(JSON.stringify(message))
     }
   }
 
   render () {
-    const { title, artist, album, albumArt, isPlaying, isStopped, totalTime } = this.state
+    const { title, artist, album, albumArt, isPlaying, isStopped, totalTime, repeatMode, shuffleMode } = this.state
     return (
       <View style={styles.container}>
         <StatusBar animated backgroundColor={colors.ORANGE_DARK} />
@@ -128,6 +137,8 @@ export default class HomeScreen extends React.Component {
             <ControlBar
               isPlaying={isPlaying}
               isStopped={isStopped}
+              repeatMode={repeatMode}
+              shuffleMode={shuffleMode}
               onPlayPress={this._handlePlayPress}
               onPrevPress={this._handlePrevPress}
               onNextPress={this._handleNextPress}
